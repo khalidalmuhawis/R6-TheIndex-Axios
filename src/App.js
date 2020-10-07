@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-import authors from "./data.js";
+
 // Components
 import Sidebar from "./Sidebar";
 import AuthorList from "./AuthorList";
@@ -8,16 +9,51 @@ import AuthorDetail from "./AuthorDetail";
 
 const App = () => {
   const [currentAuthor, setCurrentAuthor] = useState(null);
-
-  const selectAuthor = author => setCurrentAuthor(author);
+ 
+  const [authors, setAuthors] = useState([]);
+ 
+  const [loading, setLoading] = useState(true)
 
   const unselectAuthor = () => setCurrentAuthor(null);
+
+  useEffect(() => {
+    getAuthors();
+  }, []);
+
+  const getAuthors = async () => {
+    try{
+      const response = await axios.get("https://the-index-api.herokuapp.com/api/authors/")
+      console.log(response.data)
+      setAuthors(response.data)
+      setLoading(false)
+    } catch(error){
+      console.log("error!")
+      console.error(error)
+    }
+  };
+
+  const selectedAuthor = async (author) => {
+    try{
+      setLoading(true)
+      const response = await axios.get(`https://the-index-api.herokuapp.com/api/authors/${author.id}/`)
+      setCurrentAuthor(response.data)
+      setLoading(false)
+    } catch(error){
+      console.log("error!")
+      console.error(error)
+    }
+  };
 
   const getContentView = () => {
     if (currentAuthor) {
       return <AuthorDetail author={currentAuthor} />;
     } else {
-      return <AuthorList authors={authors} selectAuthor={selectAuthor} />;
+
+      if (loading){
+        return <h2>Loading...</h2>
+      } else {
+          return <AuthorList authors = {authors} selectAuthor = {selectedAuthor} />;
+      }
     }
   };
 
